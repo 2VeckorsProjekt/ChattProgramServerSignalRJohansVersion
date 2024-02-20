@@ -13,6 +13,7 @@ public class Program
         builder.Services.AddSwaggerGen();
 
         builder.Services.AddSignalR();
+
         
         var app = builder.Build();
 
