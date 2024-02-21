@@ -1,20 +1,18 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using System.Collections;
 
 namespace SignalRbackend;
 
-public sealed class ChatHub : Hub <IChatClient>
+public sealed class ChatHub : Hub<IChatClient>
 {
-    List<User> users = new List<User> { new User("Hampus", "1234"), new User("Marcus", "456"), new User("Farbror Nils", "789") };
-    static Dictionary<string, User> loggedIn = new Dictionary<string, User>();
-
-    /*
-    public ChatHub()
+    static Dictionary<string, User> users = new Dictionary<string, User>
     {
-        loggedIn = new ConcurrentDictionary<string, User>();
-    }
-    */
-    public static int GuestCount = 0;
+        { "Hampus", new User(0, "Hampus", 20, "1234") },
+        { "Marcus", new User(1, "Marcus", 50, "456") },
+        { "Johan", new User(2, "Johan", 150, "789") }
+    };
+    static Dictionary<string, string> loggedIn = new Dictionary<string, string>();
+
+    static int GuestCount = 0;
 
     public async Task Login(string username, string password)
     {
@@ -24,38 +22,38 @@ public sealed class ChatHub : Hub <IChatClient>
         {
             // Increment and use the guest count to generate a unique guest username
             username = $"Guest{++GuestCount}";
-            var guestUser = new User(username, ""); // Assuming an empty password for guests
-            loggedIn.TryAdd(Context.ConnectionId, guestUser);
+            
+            loggedIn.TryAdd(Context.ConnectionId, username);
         }
         else
         {
-            // Existing login logic for registered users
-            foreach (var item in users)
+            if (users.ContainsKey(username) && users[username].Correct(username, password))
             {
-                if (item.Correct(username, password))
-                {
-                    loggedIn.TryAdd(Context.ConnectionId, item);
-                    break; // Exit loop once the user is found and added
-                }
+                loggedIn.TryAdd(Context.ConnectionId, username);
+            }
+            else
+            {
+                isGuest = true;
+                username = $"Guest{++GuestCount}";
+                loggedIn.TryAdd(Context.ConnectionId, username);
             }
         }
 
         // Announcement for a user joining
-        string joinMessage = isGuest ? $"{username} has joined!" : $"{loggedIn[Context.ConnectionId].name} has joined!";
+        string joinMessage = isGuest ? $"{username} has joined!" : $"{loggedIn[Context.ConnectionId]} has joined!";
         await Clients.AllExcept(Context.ConnectionId).ReceiveMessage(joinMessage);
 
         // Debugging: Log current logged-in users
         foreach (var item in loggedIn)
         {
-            Console.WriteLine($"{item.Key} : {item.Value.name}");
+            Console.WriteLine($"{item.Key} : {item.Value}");
         }
     }
 
 
     public override async Task OnConnectedAsync()
     {
-        // TODO: inloggningsfunktion
-        // Clients.Client => anropar funktion Login på klienten => man fyller i namn och lösenord => skickas tillbaka och bekräftas              
+                      
     }
 
     public async Task SendMessage(string message)
@@ -65,7 +63,7 @@ public sealed class ChatHub : Hub <IChatClient>
         // Check if the sender is logged in and has a name; otherwise, label them as "Guest"
         if (loggedIn.ContainsKey(Context.ConnectionId))
         {
-            senderName = loggedIn[Context.ConnectionId].name; // Use the user's name if logged in
+            senderName = loggedIn[Context.ConnectionId]; // Use the user's name if logged in
         }
         else
         {
@@ -81,17 +79,6 @@ public sealed class ChatHub : Hub <IChatClient>
         await Clients.Others.ReceiveMessage($"{senderName}: {message}");
     }
 
-
-    public async Task EnterUsername(string username)
-    {
-        await Clients.Client(Context.ConnectionId).ReceiveMessage("Enter your username: ");
-        
-    }
-
-    public async Task EnterPassword(string username)
-    {
-        await Clients.Client(Context.ConnectionId).ReceiveMessage("Enter your password: ");
-    }
 
     /*public override async Task OnConnectedAsync()
     {
