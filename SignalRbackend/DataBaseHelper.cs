@@ -52,19 +52,70 @@ public static class DataBaseHelper
         }
     }
 
+    public static void DeleteUser(string username)
+    {
+        using (SQLiteConnection connection = new SQLiteConnection(connectionstring))
+        {
+            connection.Open();
+
+            string inputstring = $@"
+                DELETE FROM users WHERE UserName='{username}';";
+
+            using (SQLiteCommand command = new SQLiteCommand(connection))
+            {
+                command.CommandText = inputstring;
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+
+    public static void DeleteFromBlacklist(string IPaddress)
+    {
+        using (SQLiteConnection connection = new SQLiteConnection(connectionstring))
+        {
+            connection.Open();
+
+            string inputstring = $@"
+                DELETE FROM blacklist WHERE IP='{IPaddress}';";
+
+            using (SQLiteCommand command = new SQLiteCommand(connection))
+            {
+                command.CommandText = inputstring;
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+
+    public static void DeleteChatroom(string endpoint)
+    {
+        using (SQLiteConnection connection = new SQLiteConnection(connectionstring))
+        {
+            connection.Open();
+
+            string inputstring = $@"
+                DELETE FROM chatrooms WHERE RoomName='{endpoint}';";
+
+            using (SQLiteCommand command = new SQLiteCommand(connection))
+            {
+                command.CommandText = inputstring;
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+
     public static void PushUser(User userInfo)
     {
         using (SQLiteConnection connection = new SQLiteConnection(connectionstring))
         {
             connection.Open();
 
-            string insertUser = $@"
+            string inputstring = $@"
                 INSERT INTO users (UserName, Age, PassWord)
                 VALUES ('{userInfo.UserName}', '{userInfo.Age}', '{userInfo.PassWord}');";
 
             using (SQLiteCommand command = new SQLiteCommand(connection))
             {
-                command.CommandText = insertUser;
+                command.CommandText = inputstring;
                 command.ExecuteNonQuery();
             }
         }
@@ -76,13 +127,13 @@ public static class DataBaseHelper
         {
             connection.Open();
 
-            string insertIP = $@"
+            string inputstring = $@"
                 INSERT INTO blacklist (IP)
                 VALUES ('{IPaddress}');";
 
             using (SQLiteCommand command = new SQLiteCommand(connection))
             {
-                command.CommandText = insertIP;
+                command.CommandText = inputstring;
                 command.ExecuteNonQuery();
             }
         }
@@ -94,13 +145,13 @@ public static class DataBaseHelper
         {
             connection.Open();
 
-            string insertChatRoom = $@"
+            string inputstring = $@"
                 INSERT INTO chatrooms (RoomName)
                 VALUES ('{endpoint}');";
 
             using (SQLiteCommand command = new SQLiteCommand(connection))
             {
-                command.CommandText = insertChatRoom;
+                command.CommandText = inputstring;
                 command.ExecuteNonQuery();
             }
         }
@@ -114,10 +165,10 @@ public static class DataBaseHelper
         {
             connection.Open();
             
-            string readAll = $@"
+            string inputstring = $@"
                 SELECT * FROM users;";
             
-            using (SQLiteCommand command = new SQLiteCommand(readAll, connection))
+            using (SQLiteCommand command = new SQLiteCommand(inputstring, connection))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -140,10 +191,10 @@ public static class DataBaseHelper
         {
             connection.Open();
 
-            string readAll = $@"
+            string inputstring = $@"
                 SELECT * FROM blacklist;";
 
-            using (SQLiteCommand command = new SQLiteCommand(readAll, connection))
+            using (SQLiteCommand command = new SQLiteCommand(inputstring, connection))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -166,10 +217,10 @@ public static class DataBaseHelper
         {
             connection.Open();
 
-            string readAll = $@"
+            string inputstring = $@"
                 SELECT * FROM chatrooms;";
 
-            using (SQLiteCommand command = new SQLiteCommand(readAll, connection))
+            using (SQLiteCommand command = new SQLiteCommand(inputstring, connection))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {

@@ -33,6 +33,7 @@ public class Program
         app.UseHttpsRedirection();
 
         app.MapHub<ChatHub>("/chathub");
+        app.MapHub<AdminHub>("/admin");
 
         app.Run();
     }
