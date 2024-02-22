@@ -4,13 +4,14 @@ namespace SignalRbackend;
 
 public sealed class ChatHub : Hub<IChatClient>
 {
-    static Dictionary<string, User> users = new Dictionary<string, User>
+    static Dictionary<string, User> users = new Dictionary<string, User> // Username to user object
     {
         { "Hampus", new User(0, "Hampus", 20, "1234") },
         { "Marcus", new User(1, "Marcus", 50, "456") },
         { "Johan", new User(2, "Johan", 150, "789") }
     };
-    static Dictionary<string, string> loggedIn = new Dictionary<string, string>();
+    static Dictionary<string, string> loggedIn = new Dictionary<string, string>(); // ID to username
+    static Dictionary<string, string> IDtoIP = new Dictionary<string, string>(); // ID to remote IP
 
     static int GuestCount = 0;
 
@@ -53,7 +54,7 @@ public sealed class ChatHub : Hub<IChatClient>
 
     public override async Task OnConnectedAsync()
     {
-                      
+        Context.GetHttpContext().Connection.RemoteIpAddress.ToString();
     }
 
     public async Task SendMessage(string message)
@@ -75,7 +76,7 @@ public sealed class ChatHub : Hub<IChatClient>
         // Debugging: Log the sender and message to the console (optional, for server-side debugging)
         Console.WriteLine($"{senderName}: {message}");
 
-        // Broadcast the message to all clients, including the sender, with the sender's name
+        // Broadcast the message to all clients, excluding the sender, with the sender's name
         await Clients.Others.ReceiveMessage($"{senderName}: {message}");
     }
 
