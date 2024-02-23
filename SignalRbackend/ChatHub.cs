@@ -4,14 +4,11 @@ namespace SignalRbackend;
 
 public sealed class ChatHub : Hub<IChatClient>
 {
-    static Dictionary<string, User> users = new Dictionary<string, User> // Username to user object
-    {
-        { "Hampus", new User(0, "Hampus", 20, "1234") },
-        { "Marcus", new User(1, "Marcus", 50, "456") },
-        { "Johan", new User(2, "Johan", 150, "789") }
-    };
+    /*
+    static Dictionary<string, User> users = DataBaseHelper.ReadAllUsers();
     static Dictionary<string, string> loggedIn = new Dictionary<string, string>(); // ID to username
     static Dictionary<string, string> IDtoIP = new Dictionary<string, string>(); // ID to remote IP
+    */
 
     static int GuestCount = 0;
 
@@ -24,71 +21,68 @@ public sealed class ChatHub : Hub<IChatClient>
             // Increment and use the guest count to generate a unique guest username
             username = $"Guest{++GuestCount}";
             
-            loggedIn.TryAdd(Context.ConnectionId, username);
+            GlobalData.loggedIn.TryAdd(Context.ConnectionId, username);
         }
         else
         {
-            if (users.ContainsKey(username) && users[username].Correct(username, password))
+            if (GlobalData.users.ContainsKey(username) && GlobalData.users[username].Correct(username, password))
             {
-                loggedIn.TryAdd(Context.ConnectionId, username);
+                GlobalData.loggedIn.TryAdd(Context.ConnectionId, username);
             }
             else
             {
                 isGuest = true;
                 username = $"Guest{++GuestCount}";
-                loggedIn.TryAdd(Context.ConnectionId, username);
+                GlobalData.loggedIn.TryAdd(Context.ConnectionId, username);
             }
         }
 
         // Announcement for a user joining
-        string joinMessage = isGuest ? $"{username} has joined!" : $"{loggedIn[Context.ConnectionId]} has joined!";
+        string joinMessage = isGuest ? $"{username} has joined!" : $"{GlobalData.loggedIn[Context.ConnectionId]} has joined!";
         await Clients.AllExcept(Context.ConnectionId).ReceiveMessage(joinMessage);
-
-        // Debugging: Log current logged-in users
-        foreach (var item in loggedIn)
-        {
-            Console.WriteLine($"{item.Key} : {item.Value}");
-        }
     }
-
 
     public override async Task OnConnectedAsync()
     {
-        Context.GetHttpContext().Connection.RemoteIpAddress.ToString();
+        string ip = Context.GetHttpContext().Connection.RemoteIpAddress.ToString();
+        string id = Context.ConnectionId;
+
+        GlobalData.IDtoIP.TryAdd(id, ip);
     }
 
     public async Task SendMessage(string message)
     {
-        string senderName;
-
-        // Check if the sender is logged in and has a name; otherwise, label them as "Guest"
-        if (loggedIn.ContainsKey(Context.ConnectionId))
-        {
-            senderName = loggedIn[Context.ConnectionId]; // Use the user's name if logged in
-        }
-        else
-        {
-            // For guests, you could also generate a unique guest name based on a stored counter or use the ConnectionId
-            // This example simply uses "Guest" for simplicity, but consider enhancing this for unique identification if needed
-            senderName = "Guest";
-        }
-
-        // Debugging: Log the sender and message to the console (optional, for server-side debugging)
-        Console.WriteLine($"{senderName}: {message}");
-
+        string senderName = GlobalData.loggedIn[Context.ConnectionId];
+         
         // Broadcast the message to all clients, excluding the sender, with the sender's name
         await Clients.Others.ReceiveMessage($"{senderName}: {message}");
     }
 
-
-    /*public override async Task OnConnectedAsync()
+    public async Task SendMessage2(string message)
     {
-        await Clients.All.SendAsync("ReceiveMessage", $"{Context.ConnectionId} has joined");
+        string senderName = GlobalData.loggedIn[Context.ConnectionId];
+
+        // Broadcast the message to all clients, excluding the sender, with the sender's name
+        await Clients.Others.ReceiveMessage2($"{senderName}: {message}");
     }
 
-    public async Task SendMessage(string message)
+    public async Task SendMessage3(string message)
     {
-        await Clients.All.SendAsync("ReceiveMessage", $"{Context.ConnectionId}: {message}");
+        string senderName = GlobalData.loggedIn[Context.ConnectionId];
+
+        // Broadcast the message to all clients, excluding the sender, with the sender's name
+        await Clients.Others.ReceiveMessage3($"{senderName}: {message}");
     }
-    */
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        string ip = Context.GetHttpContext().Connection.RemoteIpAddress.ToString();
+        string id = Context.ConnectionId;
+        string name = GlobalData.loggedIn[id];
+
+        Console.WriteLine($"{id} - {name} - {ip} disconnected");
+
+        //GlobalData.loggedIn.Remove(id);
+        //GlobalData.IDtoIP.Remove(id);        
+    }
 }
