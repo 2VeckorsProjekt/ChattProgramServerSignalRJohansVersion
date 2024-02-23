@@ -7,6 +7,8 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
+        DataBaseHelper.InitializeDatabase();
+        var blacklist = DataBaseHelper.ReadAllUsers();
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddEndpointsApiExplorer();

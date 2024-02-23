@@ -52,14 +52,17 @@ public static class DataBaseHelper
         }
     }
 
-    public static void DeleteUser(string username)
+    public static void DeleteUser(string username, string age, string password)
     {
         using (SQLiteConnection connection = new SQLiteConnection(connectionstring))
         {
             connection.Open();
 
             string inputstring = $@"
-                DELETE FROM users WHERE UserName='{username}';";
+                DELETE FROM users WHERE UserName='{username}'
+                AND Age='{age}'
+                AND PassWord='{password}';";
+                
 
             using (SQLiteCommand command = new SQLiteCommand(connection))
             {
@@ -109,7 +112,7 @@ public static class DataBaseHelper
         {
             connection.Open();
 
-            string inputstring = $@"
+            string inputstring = $@"                
                 INSERT INTO users (UserName, Age, PassWord)
                 VALUES ('{userInfo.UserName}', '{userInfo.Age}', '{userInfo.PassWord}');";
 
@@ -157,9 +160,9 @@ public static class DataBaseHelper
         }
     }
 
-    public static List<User> ReadAllUsers()
+    public static Dictionary<string, User> ReadAllUsers()
     {
-        var userList = new List<User>();
+        Dictionary<string, User> userList = new Dictionary<string, User>();
 
         using (SQLiteConnection connection = new SQLiteConnection(connectionstring))
         {
@@ -174,7 +177,12 @@ public static class DataBaseHelper
                 {
                     while (reader.Read())
                     {
-                        userList.Add(new User(reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2), reader.GetString(3)));
+                        int ID = reader.GetInt32(0);
+                        string username = reader.GetString(1);
+                        int age = reader.GetInt32(2);
+                        string password = reader.GetString(3);
+
+                        userList.TryAdd(username, new User(ID, username, age, password));
                     }
                 }
             }
