@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System.Xml.Linq;
 
 namespace SignalRbackend;
 
@@ -40,6 +41,14 @@ public sealed class ChatHub : Hub<IChatClient>
         // Announcement for a user joining
         string joinMessage = isGuest ? $"{username} has joined!" : $"{GlobalData.loggedIn[Context.ConnectionId]} has joined!";
         await Clients.AllExcept(Context.ConnectionId).ReceiveMessage(joinMessage);
+        await Clients.AllExcept(Context.ConnectionId).ReceiveMessage2(joinMessage);
+        await Clients.AllExcept(Context.ConnectionId).ReceiveMessage3(joinMessage);
+        await Clients.AllExcept(Context.ConnectionId).ReceiveClientUpdate($"Connected;{username}");
+
+        foreach (var item in GlobalData.loggedIn)
+        {
+            Console.WriteLine(item.Key + ":" + item.Value);
+        }
     }
 
     public override async Task OnConnectedAsync()
@@ -74,6 +83,20 @@ public sealed class ChatHub : Hub<IChatClient>
         await Clients.Others.ReceiveMessage3($"{senderName}: {message}");
     }
 
+    public async Task SendLoggedInList()
+    {
+        string list = string.Empty;
+
+        foreach (var item in GlobalData.loggedIn)
+        {
+            list += item.Value + ";";
+        }
+
+        await Clients.Caller.ReceiveClientList(list);
+
+        Console.WriteLine(list);
+    }
+
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         string ip = Context.GetHttpContext().Connection.RemoteIpAddress.ToString();
@@ -82,7 +105,13 @@ public sealed class ChatHub : Hub<IChatClient>
 
         Console.WriteLine($"{id} - {name} - {ip} disconnected");
 
-        //GlobalData.loggedIn.Remove(id);
+        string leaveMessage = $"{name} has disconnected!";
+        await Clients.AllExcept(Context.ConnectionId).ReceiveMessage(leaveMessage);
+        await Clients.AllExcept(Context.ConnectionId).ReceiveMessage2(leaveMessage);
+        await Clients.AllExcept(Context.ConnectionId).ReceiveMessage3(leaveMessage);
+        await Clients.AllExcept(Context.ConnectionId).ReceiveClientUpdate($"Disconnected;{name}");
+
+        GlobalData.loggedIn.Remove(id);
         //GlobalData.IDtoIP.Remove(id);        
     }
 }
