@@ -7,5 +7,6 @@
         Task ReceiveMessage3(string message);
         Task ReceiveClientList(string message);
         Task ReceiveClientUpdate(string message);
+        Task ReceivePM(string message);
     }
 }

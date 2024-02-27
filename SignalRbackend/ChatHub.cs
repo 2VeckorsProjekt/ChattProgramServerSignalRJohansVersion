@@ -23,18 +23,21 @@ public sealed class ChatHub : Hub<IChatClient>
             username = $"Guest{++GuestCount}";
             
             GlobalData.loggedIn.TryAdd(Context.ConnectionId, username);
+            GlobalData.nameToId.TryAdd(username, Context.ConnectionId);
         }
         else
         {
             if (GlobalData.users.ContainsKey(username) && GlobalData.users[username].Correct(username, password))
             {
                 GlobalData.loggedIn.TryAdd(Context.ConnectionId, username);
+                GlobalData.nameToId.TryAdd(username, Context.ConnectionId);
             }
             else
             {
                 isGuest = true;
                 username = $"Guest{++GuestCount}";
                 GlobalData.loggedIn.TryAdd(Context.ConnectionId, username);
+                GlobalData.nameToId.TryAdd(username, Context.ConnectionId);
             }
         }
 
@@ -46,6 +49,10 @@ public sealed class ChatHub : Hub<IChatClient>
         await Clients.AllExcept(Context.ConnectionId).ReceiveClientUpdate($"Connected;{username}");
 
         foreach (var item in GlobalData.loggedIn)
+        {
+            Console.WriteLine(item.Key + ":" + item.Value);
+        }
+        foreach (var item in GlobalData.nameToId)
         {
             Console.WriteLine(item.Key + ":" + item.Value);
         }
@@ -83,6 +90,19 @@ public sealed class ChatHub : Hub<IChatClient>
         await Clients.Others.ReceiveMessage3($"{senderName}: {message}");
     }
 
+    public async Task RelayPM(string message)
+    {
+        string[] mess = message.Split(';');
+        string sender = GlobalData.loggedIn[Context.ConnectionId];
+        string receiver = mess[0];
+        string content = mess[1];
+
+        Console.WriteLine($"SEND PM - {sender}; {content} to {receiver}");
+
+        string receiverID = GlobalData.nameToId[receiver];
+        await Clients.Client(receiverID).ReceivePM($"{sender}; {content}");
+    }
+
     public async Task SendLoggedInList()
     {
         string list = string.Empty;
@@ -111,6 +131,7 @@ public sealed class ChatHub : Hub<IChatClient>
         await Clients.AllExcept(Context.ConnectionId).ReceiveMessage3(leaveMessage);
         await Clients.AllExcept(Context.ConnectionId).ReceiveClientUpdate($"Disconnected;{name}");
 
+        GlobalData.nameToId.Remove(name);
         GlobalData.loggedIn.Remove(id);
         //GlobalData.IDtoIP.Remove(id);        
     }
