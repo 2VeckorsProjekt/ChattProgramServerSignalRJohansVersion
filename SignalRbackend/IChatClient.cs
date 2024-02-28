@@ -1,5 +1,6 @@
 ﻿namespace SignalRbackend
 {
+    // "Kortkommandon"
     public interface IChatClient
     {
         Task ReceiveMessage(string message);

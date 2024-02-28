@@ -18,7 +18,6 @@ public static class DataBaseHelper
         {
             connection.Open();
 
-            // Create tables for your data
             string createUsersTableQuery = @"
                         CREATE TABLE IF NOT EXISTS users (
                         Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,7 +26,6 @@ public static class DataBaseHelper
                         PassWord TEXT NOT NULL
                     );";
 
-            // Create tables for your data
             string createChatRoomsTableQuery = @"
                         CREATE TABLE IF NOT EXISTS chatrooms (
                         Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -142,7 +140,7 @@ public static class DataBaseHelper
         }
     }
 
-    public static void PushChatRoom(string endpoint) // FIXA
+    public static void PushChatRoom(string endpoint) // FIXME:
     {
         using (SQLiteConnection connection = new SQLiteConnection(connectionstring))
         {

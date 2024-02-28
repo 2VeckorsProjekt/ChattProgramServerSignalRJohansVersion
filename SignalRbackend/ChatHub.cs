@@ -5,12 +5,6 @@ namespace SignalRbackend;
 
 public sealed class ChatHub : Hub<IChatClient>
 {
-    /*
-    static Dictionary<string, User> users = DataBaseHelper.ReadAllUsers();
-    static Dictionary<string, string> loggedIn = new Dictionary<string, string>(); // ID to username
-    static Dictionary<string, string> IDtoIP = new Dictionary<string, string>(); // ID to remote IP
-    */
-
     static int GuestCount = 0;
 
     public async Task Login(string username, string password)
@@ -19,7 +13,6 @@ public sealed class ChatHub : Hub<IChatClient>
 
         if (isGuest)
         {
-            // Increment and use the guest count to generate a unique guest username
             username = $"Guest{++GuestCount}";
             
             GlobalData.loggedIn.TryAdd(Context.ConnectionId, username);
@@ -41,7 +34,6 @@ public sealed class ChatHub : Hub<IChatClient>
             }
         }
 
-        // Announcement for a user joining
         string joinMessage = isGuest ? $"{username} has joined!" : $"{GlobalData.loggedIn[Context.ConnectionId]} has joined!";
         await Clients.AllExcept(Context.ConnectionId).ReceiveMessage(joinMessage);
         await Clients.AllExcept(Context.ConnectionId).ReceiveMessage2(joinMessage);
@@ -66,32 +58,29 @@ public sealed class ChatHub : Hub<IChatClient>
         GlobalData.IDtoIP.TryAdd(id, ip);
     }
 
+
     public async Task SendMessage(string message)
     {
         string senderName = GlobalData.loggedIn[Context.ConnectionId];
-         
-        // Broadcast the message to all clients, excluding the sender, with the sender's name
+        // Sänd meddelande till alla andra klienter (utom avsändaren) med avsändarnamnet inkluderat
         await Clients.Others.ReceiveMessage($"{senderName}: {message}");
     }
 
     public async Task SendMessage2(string message)
     {
         string senderName = GlobalData.loggedIn[Context.ConnectionId];
-
-        // Broadcast the message to all clients, excluding the sender, with the sender's name
         await Clients.Others.ReceiveMessage2($"{senderName}: {message}");
     }
 
-    public async Task SendMessage3(string message)
+    public async Task SendMessage3(string message) 
     {
         string senderName = GlobalData.loggedIn[Context.ConnectionId];
-
-        // Broadcast the message to all clients, excluding the sender, with the sender's name
         await Clients.Others.ReceiveMessage3($"{senderName}: {message}");
     }
 
     public async Task RelayPM(string message)
     {
+        // Dela upp meddelandet i mottagare och innehåll
         string[] mess = message.Split(';');
         string sender = GlobalData.loggedIn[Context.ConnectionId];
         string receiver = mess[0];
@@ -103,8 +92,9 @@ public sealed class ChatHub : Hub<IChatClient>
         await Clients.Client(receiverID).ReceivePM($"{sender}; {content}");
     }
 
+    // Skicka en lista med namn på inloggade användare
     public async Task SendLoggedInList()
-    {
+    {        
         string list = string.Empty;
 
         foreach (var item in GlobalData.loggedIn)
@@ -133,6 +123,5 @@ public sealed class ChatHub : Hub<IChatClient>
 
         GlobalData.nameToId.Remove(name);
         GlobalData.loggedIn.Remove(id);
-        //GlobalData.IDtoIP.Remove(id);        
     }
 }
