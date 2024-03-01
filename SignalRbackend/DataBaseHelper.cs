@@ -6,11 +6,20 @@ public static class DataBaseHelper
 {
     private static string connectionstring = @"Data Source=..\..\..\Files\Test.db;Version=3;";
 
+    // Viktigt: Om det blir sökvägsfel finns 2 sätt att lösa det:
+    // 1: Öppna EXEN från bin/debug/net8.0 eller
+    // 2: Ta bort '..\..\..\' från sökvägen här och nedan så funkar det från visual studio
+    // Beror på att serverns sökväg utgår från NET8-mappen från exen och från projektets grundmapp från VS
+
+
 
     public static void InitializeDatabase()
     {
+
+        // Viktigt: samma som ovan gäller här
         if (!File.Exists(@"..\..\..\Files\Test.db"))
         {
+            // Viktigt: Och här
             SQLiteConnection.CreateFile(@"..\..\..\Files\Test.db");
         }
 
